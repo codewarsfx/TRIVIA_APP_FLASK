@@ -91,9 +91,9 @@ def create_app(test_config=None):
   
         return jsonify({
             "questions": questions_db,
-            "totalQuestions": Question.query.count(),
+            "total_questions": Question.query.count(),
             "categories" :{category.id: category.type for category in Category.query.all()},
-            "currentCategory":None
+            "current_category":"History"
         }), 200
 
         
@@ -141,6 +141,8 @@ def create_app(test_config=None):
         difficulty = request_body.get('difficulty')
         category = request_body.get('category')
         
+        if not question or not answer or not category or not difficulty:
+            abort(400)
         new_question = Question(question, answer, difficulty, category)
         try:
             new_question.insert()
@@ -167,6 +169,9 @@ def create_app(test_config=None):
     @app.route('/api/searchquestions',methods=["POST"])
     def search_questions():
         search_term = request.get_json().get('searchTerm')
+
+        if not search_term:
+            abort(400)
        
         search_results = [result.format() for result  in Question.find_question_byName(search_term)]
 
@@ -176,8 +181,8 @@ def create_app(test_config=None):
 
         return jsonify({
             "questions": search_results,
-            "totalQuestions": len(search_results),
-             "currentCategory":None
+            "total_questions": len(search_results),
+             "current_category":None
         }),200
    
 
@@ -199,8 +204,8 @@ def create_app(test_config=None):
 
         return jsonify({
             "questions": category_questions,
-            "totalQuestions":len(category_questions),
-            "currentCategory": Category.query.filter(Category.id==category_id).first().type
+            "total_questions":len(category_questions),
+            "current_category": Category.query.filter(Category.id==category_id).first().type
         }),200
 
 
