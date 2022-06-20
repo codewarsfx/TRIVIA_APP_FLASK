@@ -220,11 +220,13 @@ def create_app(test_config=None):
         previous_questions = request.get_json().get('previous_questions')
         quiz_category =request.get_json().get('quiz_category')
 
-        if not previous_questions and not quiz_category:
+        if  previous_questions is None or quiz_category is None:
             abort(400)
 
         category_questions =[question.format() for question in Question.query.filter(Question.category==quiz_category['id']).all()]
 
+        if not category_questions:
+            abort(404)
 
         while True:
             random_question = random.choice(category_questions)
@@ -234,13 +236,43 @@ def create_app(test_config=None):
         return {
             "question":random_question
         },200
-
+     
+    @app.route('/*',methods=['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'])
+    def handle_inexistentRoutes():
+        abort(404)
 
     """
     @TODO:
     Create error handlers for all expected errors
     including 404 and 422.
     """
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "status":"fail",
+            "message":"resource not found"
+        }),404
+    @app.errorhandler(422)
+    def cannot_proccess(error):
+        return jsonify({
+            "status":"fail",
+            "message":"An error occured while processing your request"
+        }),422
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "status":"fail",
+            "message":"Invalid request body"
+        }),400
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({
+            "status":"fail",
+            "message":"Internal Server Error"
+        }),500
+
+
 
     return app
 
