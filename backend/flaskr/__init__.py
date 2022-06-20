@@ -152,7 +152,7 @@ def create_app(test_config=None):
             abort(422)
         finally:
             db.session.close()
-        pass
+  
 
     """
     @TODO:
@@ -169,7 +169,7 @@ def create_app(test_config=None):
         search_term = request.get_json().get('searchTerm')
        
         search_results = [result.format() for result  in Question.find_question_byName(search_term)]
-        
+
         if not search_results:
             abort(404)
 
@@ -179,7 +179,7 @@ def create_app(test_config=None):
             "totalQuestions": len(search_results),
              "currentCategory":None
         }),200
-        pass
+   
 
     """
     @TODO:
@@ -189,6 +189,20 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
+    @app.route('/api/categories/<int:category_id>/questions',methods=["GET"])
+    def get_category_questions(category_id):
+        
+        category_questions =[question.format() for question in Question.query.filter(Question.category==category_id).all()]
+
+        if not category_questions:
+            abort(404)
+
+        return jsonify({
+            "questions": category_questions,
+            "totalQuestions":len(category_questions),
+            "currentCategory": Category.query.filter(Category.id==category_id).first().type
+        }),200
+
 
     """
     @TODO:
@@ -201,6 +215,26 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+    @app.route('/api/quizzes',methods=["POST"])
+    def play_quiz():
+        previous_questions = request.get_json().get('previous_questions')
+        quiz_category =request.get_json().get('quiz_category')
+
+        if not previous_questions and not quiz_category:
+            abort(400)
+
+        category_questions =[question.format() for question in Question.query.filter(Question.category==quiz_category['id']).all()]
+
+
+        while True:
+            random_question = random.choice(category_questions)
+            if random_question['id'] not in previous_questions:
+                break
+        
+        return {
+            "question":random_question
+        },200
+
 
     """
     @TODO:
