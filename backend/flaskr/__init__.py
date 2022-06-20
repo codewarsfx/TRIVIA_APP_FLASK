@@ -237,6 +237,10 @@ def create_app(test_config=None):
             random_question = random.choice(category_questions)
             if random_question['id'] not in previous_questions:
                 break
+            else:
+                 return {
+            "question":None
+        }
         
         return {
             "question":random_question
