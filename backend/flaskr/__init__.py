@@ -1,6 +1,10 @@
 from calendar import c
 from crypt import methods
+from hashlib import new
+from http.client import NETWORK_AUTHENTICATION_REQUIRED
+from multiprocessing.connection import answer_challenge
 from tkinter import N
+from unicodedata import category
 from models import Category
 import os
 from flask import Flask, request, abort, jsonify
@@ -112,6 +116,7 @@ def create_app(test_config=None):
                 return {"message":"question successfully deleted"},204
             except:
                 db.session.rollback()
+                abort(422)
             finally:
                 db.session.close()
 
@@ -126,6 +131,27 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
+    @app.route('/api/questions',methods=["POST"])
+    def create_question():
+        request_body = request.get_json()
+
+        question = request_body.get('question')
+        answer = request_body.get('answer')
+        difficulty = request_body.get('difficulty')
+        category = request_body.get('category')
+        
+        new_question = Question(question, answer, difficulty, category)
+        try:
+            new_question.insert()
+            return {
+                "message":"success creating new question"
+            }, 201
+        except:
+            db.session.rollback()
+            abort(422)
+        finally:
+            db.session.close()
+        pass
 
     """
     @TODO:
