@@ -5,6 +5,7 @@ from http.client import NETWORK_AUTHENTICATION_REQUIRED
 from multiprocessing.connection import answer_challenge
 from tkinter import N
 from unicodedata import category
+
 from models import Category
 import os
 from flask import Flask, request, abort, jsonify
@@ -163,6 +164,22 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     """
+    @app.route('/api/searchquestions',methods=["POST"])
+    def search_questions():
+        search_term = request.get_json().get('searchTerm')
+       
+        search_results = [result.format() for result  in Question.find_question_byName(search_term)]
+        
+        if not search_results:
+            abort(404)
+
+
+        return jsonify({
+            "questions": search_results,
+            "totalQuestions": len(search_results),
+             "currentCategory":None
+        }),200
+        pass
 
     """
     @TODO:

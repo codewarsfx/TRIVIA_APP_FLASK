@@ -53,6 +53,9 @@ class Question(db.Model):
     @classmethod
     def find_question_byId(cls,id):
         return cls.query.filter(cls.id == id).first()
+    @classmethod
+    def find_question_byName(cls,search_term):
+        return cls.query.filter(cls.question.ilike('%' + search_term + '%')).all()
 
     def format(self):
         return {
