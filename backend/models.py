@@ -17,7 +17,7 @@ def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://codewarsfx@localhost:5432/trivia'
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
-    db.init_app(app)
+    db.init_app(app) 
     db.create_all()
 
 """
@@ -49,6 +49,10 @@ class Question(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
+    
+    @classmethod
+    def find_question_byId(cls,id):
+        return cls.query.filter(cls.id == id).first()
 
     def format(self):
         return {

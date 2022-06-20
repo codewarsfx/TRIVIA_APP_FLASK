@@ -1,5 +1,6 @@
 from calendar import c
 from crypt import methods
+from tkinter import N
 from models import Category
 import os
 from flask import Flask, request, abort, jsonify
@@ -7,9 +8,20 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
-from models import setup_db, Question, Category
+from models import setup_db, Question, Category,db
 
 QUESTIONS_PER_PAGE = 10
+
+def paginate_response(request,Model):
+    page = request.args.get("page",1,type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    paginated_res = Model.query.all()[start:end]
+
+
+    return [res.format() for res in paginated_res]
+
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -39,14 +51,15 @@ def create_app(test_config=None):
     @app.route('/api/categories',methods=["GET"])
     def get_categories():
         categories_db = Category.query.all()
+        if not categories_db:
+            abort(404)
         categories = {}
         for category in categories_db:
             categories[f"{category.id}"] = category.type
         
         return jsonify({
             "categories": categories
-        })
-        pass
+        }),200
 
 
     """
@@ -62,6 +75,25 @@ def create_app(test_config=None):
     Clicking on the page numbers should update the questions.
     """
 
+    
+    @app.route('/api/questions',methods=["GET"])
+    def get_questions():
+
+        questions_db = paginate_response(request,Question)
+        
+        if not questions_db:
+            abort(404)
+  
+        return jsonify({
+            "questions": questions_db,
+            "totalQuestions": Question.query.count(),
+            "categories" :{category.id: category.type for category in Category.query.all()},
+            "currentCategory":None
+        }), 200
+
+        
+
+
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.
@@ -69,8 +101,22 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
+    @app.route('api/questions/<int:question_id',methods=["DELETE"])
+    def delete_question(question_id):
+        question = Question.find_question_byId(question_id)
+        if not question:
+            abort(404)
+        else:
+            try:
+                question.delete()
+                return 204
+            except:
+                db.session.rollback()
+            finally:
+                db.session.close()
 
     """
+    
     @TODO:
     Create an endpoint to POST a new question,
     which will require the question and answer text,
