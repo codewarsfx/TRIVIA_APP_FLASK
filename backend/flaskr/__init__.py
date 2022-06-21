@@ -225,26 +225,29 @@ def create_app(test_config=None):
         previous_questions = request.get_json().get('previous_questions')
         quiz_category =request.get_json().get('quiz_category')
 
+
+
         if  previous_questions is None or quiz_category is None:
             abort(400)
+        if quiz_category["id"] == 0:            
+            category_questions =[question.format() for question in Question.query.all()]
+        else:
+          category_questions =[question.format() for question in Question.query.filter(Question.category==quiz_category['id']).all()]
 
-        category_questions =[question.format() for question in Question.query.filter(Question.category==quiz_category['id']).all()]
-
-        if not category_questions:
-            abort(404)
+        
 
         while True:
             random_question = random.choice(category_questions)
             if random_question['id'] not in previous_questions:
                 break
             else:
-                 return {
+                 return jsonify({
             "question":None
-        }
+        })
         
-        return {
+        return jsonify({
             "question":random_question
-        },200
+        }),200
      
     @app.route('/*',methods=['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'])
     def handle_inexistentRoutes():

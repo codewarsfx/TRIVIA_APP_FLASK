@@ -1,11 +1,13 @@
-from dataclasses import dataclass
+
 import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
 
+
 from flaskr import create_app
 from models import setup_db, Question, Category
+from settings import TEST_DB_NAME,DB_USER
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -15,7 +17,7 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
+        self.database_name = TEST_DB_NAME
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
@@ -53,10 +55,10 @@ class TriviaTestCase(unittest.TestCase):
             data = json.loads(res.data)
 
             self.assertEquals(res.status_code, 200)
-            self.assertTrue(data["totalQuestions"])
+            self.assertTrue(data["total_questions"])
             self.assertTrue(data["questions"])
             self.assertTrue(data["categories"])
-            self.assertEqual(data["currentCategory"],None)
+            self.assertEqual(data["current_category"],'History')
     
     def test_404_get_questions(self):
             res = self.client().get('/api/questions?page=10000')
@@ -66,10 +68,7 @@ class TriviaTestCase(unittest.TestCase):
             self.assertEqual(data["message"],"resource not found")
             self.assertEqual(data["status"],"fail")
     
-    def test_delete_question(self):
-        res = self.client().delete('/api/questions/21')
- 
-        self.assertEqual(res.status_code,204)
+   
     
         
     def test_404_delete_questions(self):
@@ -107,8 +106,8 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         self.assertTrue(len(data['questions']) > 0)
-        self.assertTrue(data['totalQuestions'])
-        self.assertEqual(data["currentCategory"],None)
+        self.assertTrue(data['total_questions'])
+        self.assertEqual(data["current_category"],None)
     
     def test_400_Search_question(self):
         res = self.client().post('/api/searchquestions',json={})
@@ -134,8 +133,8 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEquals(res.status_code, 200)
         self.assertTrue(len(data["questions"])>0)
-        self.assertTrue(data["currentCategory"],data["questions"][0]["category"])
-        self.assertTrue(data["totalQuestions"])
+        self.assertTrue(data["current_category"],data["questions"][0]["category"])
+        self.assertTrue(data["total_questions"])
     
     def test_404_get_by_category(self):
         res = self.client().get('/api/categories/1000/questions')
